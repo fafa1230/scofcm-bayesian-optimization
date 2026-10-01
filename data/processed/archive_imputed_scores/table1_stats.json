@@ -1,0 +1,54 @@
+{
+  "total_battles": 106134,
+  "total_raters": 49382,
+  "vote_outcomes_pct": {
+    "model_b": 31.11,
+    "model_a": 30.53,
+    "tie": 19.29,
+    "tie (bothbad)": 19.07
+  },
+  "indonesian_votes": 101,
+  "retained_raters": 1149,
+  "battles_retained_raters": 24766,
+  "raters_in_profile_matrix": 1149,
+  "coverage_per_model_min_max": [
+    426,
+    987
+  ],
+  "density_pct": 50.2,
+  "raters_without_historical_votes": 387,
+  "raters_without_current_votes": 280,
+  "pilot": {
+    "size": 512,
+    "seed": 0,
+    "valid": 512,
+    "seconds_per_evaluation": 0.05941385611914107,
+    "raw_min": [
+      0.14367024690491592,
+      0.0105795477596706,
+      130.0
+    ],
+    "raw_max": [
+      0.3478197272704377,
+      0.027744615195055125,
+      272.0
+    ],
+    "spearman_raw_objectives": [
+      [
+        1.0,
+        -0.562,
+        -0.172
+      ],
+      [
+        -0.562,
+        1.0,
+        -0.046
+      ],
+      [
+        -0.172,
+        -0.046,
+        1.0
+      ]
+    ]
+  }
+}

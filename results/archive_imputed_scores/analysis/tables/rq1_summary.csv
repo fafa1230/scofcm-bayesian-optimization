@@ -1,0 +1,3 @@
+metric,SOBO median,MOBO median,p (Wilcoxon),p (Holm),A12 (MOBO better),effect
+Hypervolume (higher is better),1.1270711609123154,1.1184857886572104,0.47490501403808594,0.47490501403808594,0.42,small
+Best weighted sum g_wE (lower is better),0.07344911533655246,0.07931765993749142,0.07661792341167123,0.15323584682334246,0.315,medium

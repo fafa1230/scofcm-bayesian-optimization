@@ -1,0 +1,14 @@
+# environment
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# raw LMArena download (re-created by 01_prepare_data.py)
+data/raw/
+
+# manuscript sources (unpublished; kept locally only)
+manuscript/
+
+# smoke-test outputs
+results/**/*_quick/
