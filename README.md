@@ -2,7 +2,7 @@
 
 Code, processed data, and experimental logs for the paper
 
-> I. Lazulfa *et al.*, "Comparing Single- and Multi-Objective Bayesian Optimization for
+> I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
 > Soft-Constrained Fuzzy Clustering in Large-Scale Group Decisions," manuscript, 2026.
 
 The study tunes the three balancing parameters (ζ, κ, μ) of the soft-constrained fuzzy clustering
