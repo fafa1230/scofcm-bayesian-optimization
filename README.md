@@ -32,11 +32,13 @@ In VS Code: *Python: Select Interpreter* → `.venv/bin/python`.
 | 2 | `python 02_run_experiment.py --jobs 4` | Full experiment: 20 seeds × 5 runs × 60 evaluations (about 23 min with 4 workers on an M4 Pro) | II-E |
 | 3 | `python 03_analyze.py` | RQ1–RQ3 metrics, tests, Figure 2 → `results/analysis/` | II-F, III-A |
 | 4 | `python 05_diagnostics.py` | Pareto-front size, (κ, μ) grid, ζ profile (Figure 3), time break-even → `results/analysis/diagnostics.md` | III-A, III-B |
-| 5 | `python 06_sanity_benchmark.py` | SOBO vs MOBO on DTLZ2 and on a problem with aligned objectives | II-G, III-A |
+| 5 | `python 06_sanity_benchmark.py` | SOBO vs MOBO on DTLZ2 and on a problem with aligned objectives → `results/analysis/tables/sanity_benchmark.csv` | II-G, III-A |
+| 6 | `python 07_decision_analysis.py` | The selected decisions: subgroup sizes and weights, agreement with the flat ranking, effect of μ, ζ band, and how many MOBO Pareto configurations change the partition or ranking (main and imputed-score runs) → `results/analysis/decisions.md` | III-A-3, III-B |
 | – | `python 04_verify_baseline.py` | Optional: reproduces the case study of Yang et al. (needs their matrices in `data/yang_case/*.csv`, not included) | – |
 
-`02_run_experiment.py` skips finished runs, so it can be stopped and restarted. Steps 3–5 can be run
-directly on the logs in this repository without repeating step 2.
+`02_run_experiment.py` skips finished runs, so it can be stopped and restarted. Steps 3–6 can be run
+directly on the logs in this repository without repeating step 2 (step 5 does not use the LMArena
+data and takes about 10 minutes).
 
 ## Where each part of the method lives
 
@@ -56,7 +58,7 @@ directly on the logs in this repository without repeating step 2.
   HBC and CRC relations, PageRank centralities, and the pilot normalization bounds of (12).
 - `data/processed/table1_stats.json`: the numbers in Table 1 and a summary of the pilot sample.
 - `results/logs/seed{S}_{RUN}.jsonl`: every evaluation of the main experiment (x, objectives, c*, timings).
-- `results/analysis/`: `summary.md`, `diagnostics.md`, `tables/*.csv`, and the figures.
+- `results/analysis/`: `summary.md` (RQ1–RQ3), `diagnostics.md`, `decisions.md`, `tables/*.csv`, and the figures.
 - `results/archive_imputed_scores/` and `data/processed/archive_imputed_scores/`: the sensitivity run in
   which subgroup scores were averaged over all members, including imputed entries (Section III-A-4).
 
