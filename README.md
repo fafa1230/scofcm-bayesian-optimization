@@ -46,10 +46,10 @@ data and takes about 10 minutes).
 |---|---|
 | Table 2 (all settings) | `config.py` |
 | II-B data, P-HFE score (1), Jaccard relations (2), PageRank | `src/data.py` |
-| II-C SCO-FCM Stages 1–5, (3)–(8) | `src/scofcm.py` (`SCOFCMPipeline`) |
-| II-D objectives f1–f3 and normalization, (9)–(12) | `src/scofcm.py` (`evaluate`, `normalize`) |
-| II-E SOBO (GP + EI) and MOBO (GP + EHVI) | `src/optimizers.py` |
-| II-F hypervolume (13), weight-coverage gap (14), A12, Holm | `src/metrics.py`, `03_analyze.py` |
+| II-C SCO-FCM pipeline (objective function), Stages 1–5, (3)–(8) | `src/scofcm.py` (`SCOFCMPipeline`) |
+| II-D objectives f1–f3 and normalization, (9)–(12); constraints (K1)–(K4) and the MOBO/SOBO problems (13)–(14) | `src/scofcm.py` (`evaluate`, `normalize`), `config.py` |
+| II-E SOBO (GP + EI, (15)) and MOBO (GP + EHVI, (16)); decisions x_SOBO and x_MOBO | `src/optimizers.py`, `src/metrics.py` (`compromise_index`) |
+| II-F hypervolume (17), weight-coverage gap (18), A12, Holm | `src/metrics.py`, `03_analyze.py` |
 | Figure style (Times New Roman 8 pt, printed size) | `src/plotstyle.py` |
 
 ## Data and results in this repository
@@ -82,7 +82,7 @@ ICML 2024, when using the data.
 3. **GP noise.** Phi is deterministic but jumps when c* or iteration counts change, so each GP
    estimates a homoskedastic noise term. If a fit still fails, a quasi-random point is evaluated
    (logged as `bo_fallback` and counted in the summary).
-4. **Nearest subgroup in the silhouette (7)** is the one whose centre is closest to the rater,
+4. **Nearest subgroup in the silhouette (7)** is the one whose center is closest to the rater,
    as in the baseline.
 5. **RQ2 correlations** are computed on the normalized objectives (all minimized), so a negative
    Spearman's rho means a genuine conflict.

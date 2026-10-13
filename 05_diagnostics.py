@@ -80,7 +80,7 @@ def main():
                      "f1n": r.f_norm[0], "f2n": r.f_norm[1], "f3n": r.f_norm[2]})
     prof = pd.DataFrame(prof)
     prof.to_csv(out / "tables" / "diag_zeta_profile.csv", index=False)
-    fig, ax = plt.subplots(figsize=(3.4, 1.62))
+    fig, ax = plt.subplots(figsize=(3.4, 1.42))
     ax.plot(prof["zeta"], prof["g_E"])
     ax.axvline(0.4, color="grey", ls=":", lw=1, label="baseline OFAT, $\\zeta$ = 0.4")
     ax.axvline(zeta_star, color="C3", ls="--", lw=1, label=f"selected by SOBO/MOBO, $\\zeta$ ≈ {zeta_star:.2f}")
