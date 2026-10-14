@@ -19,7 +19,7 @@ from scipy import stats
 from sklearn.metrics import adjusted_rand_score
 
 import config
-from src.data import load_instance
+from src.data import _long_outcomes, load_battles, load_instance
 from src.metrics import compromise_index, nondominated_mask
 from src.scofcm import pipeline_from_instance, scalarize
 
@@ -130,6 +130,27 @@ def main():
            f"weights: {sorted(t['weights_SOBO'].unique().tolist())}",
            f"- Kendall tau between the two SOBO subgroups (real votes): {rng('tau_subgroups_SOBO')}",
            f"- Kendall tau between the SOBO consensus and the flat ranking: {rng('tau_consensus_vs_flat_SOBO')}"]
+
+    # ---- voting behavior of the two SOBO subgroups (seed 1; all seeds give the same split) ------
+    r_s = dec[seeds[0]][0]
+    small = np.argmin(np.bincount(r_s.labels))
+    group = dict(zip(inst["raters"], np.where(r_s.labels == small, "minority", "majority")))
+    battles = load_battles()
+    battles = battles[battles["judge_hash"].isin(group)]
+    battles["group"] = battles["judge_hash"].map(group)
+    tie_share = battles["winner"].str.startswith("tie").groupby(battles["group"]).mean()
+    long = _long_outcomes(battles)
+    long = long[long["model"].isin(set(inst["models"]))]
+    long["group"] = long["rater"].map(group)
+    decisive = long[(long["group"] == "minority") & (long["gamma"] != 0.5)]
+    half = {g: float(np.mean(np.isclose(F[(r_s.labels == small) == (g == "minority")][
+        observed[(r_s.labels == small) == (g == "minority")]], 0.5))) for g in ("majority", "minority")}
+    md += ["\n## Voting behavior of the two SOBO subgroups",
+           f"- Share of ties among all votes: majority {100 * tie_share['majority']:.1f}%, minority {100 * tie_share['minority']:.1f}%",
+           f"- Share of observed scores equal to 0.5: majority {100 * half['majority']:.1f}%, minority {100 * half['minority']:.1f}%",
+           f"- Decisive outcomes behind the minority's scores on the 30 models: {len(decisive)} of "
+           f"{int((long['group'] == 'minority').sum())}, from {decisive['rater'].nunique()} of {int(np.sum(r_s.labels == small))} raters, "
+           f"on {decisive['model'].nunique()} models"]
 
     # ---- effect of mu at the selected zeta ------------------------------------------------------
     zeta_star = float(t["zeta_SOBO"].median())

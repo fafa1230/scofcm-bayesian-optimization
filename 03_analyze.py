@@ -92,7 +92,7 @@ def rq1(df, seeds, out):
     ])
     summary.to_csv(out / "tables" / "rq1_summary.csv", index=False)
 
-    fig, axes = plt.subplots(1, 2, figsize=(TEXT_WIDTH, 1.62))
+    fig, axes = plt.subplots(1, 2, figsize=(TEXT_WIDTH, 1.52))
     for ax, key, ylabel, tag in ((axes[0], "hv", "Hypervolume", "(a)"),
                                  (axes[1], "g", "Best weighted sum $g_{w_E}$", "(b)")):
         for run, label in (("SOBO_E", "SOBO"), ("MOBO", "MOBO")):

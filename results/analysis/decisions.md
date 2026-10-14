@@ -10,6 +10,11 @@
 - Kendall tau between the two SOBO subgroups (real votes): -0.195 to -0.195
 - Kendall tau between the SOBO consensus and the flat ranking: 1.000 to 1.000
 
+## Voting behavior of the two SOBO subgroups
+- Share of ties among all votes: majority 41.5%, minority 96.9%
+- Share of observed scores equal to 0.5: majority 27.6%, minority 95.5%
+- Decisive outcomes behind the minority's scores on the 30 models: 51 of 2153, from 24 of 75 raters, on 22 models
+
 ## Effect of mu at zeta = 0.484, kappa = 0.5
 - mu = 0: c* = 2, weights 0.935/0.065, f2 = 0.02882
 - mu = 1: c* = 2, weights 0.930/0.070, f2 = 0.02882
