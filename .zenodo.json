@@ -1,0 +1,26 @@
+{
+  "title": "SOBO vs MOBO for the balancing parameters of SCO-FCM: code, processed LMArena data, and experimental logs",
+  "upload_type": "software",
+  "description": "<p>Code, processed data, and experimental logs for the paper \"Comparing Single- and Multi-Objective Bayesian Optimization for Soft-Constrained Fuzzy Clustering in Large-Scale Group Decisions\" by I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya (Universitas Negeri Malang).</p><p>The study tunes the three balancing parameters (zeta, kappa, mu) of the soft-constrained fuzzy clustering method SCO-FCM for large-scale group decision making, using 1,149 LMArena raters and 30 models, and compares single-objective Bayesian optimization (GP + EI) with multi-objective Bayesian optimization (GP + EHVI) over 20 paired replications. The archive contains the SCO-FCM pipeline, the optimizers, the analysis scripts, the processed rater-profile matrix, and every logged evaluation. The raw votes are not redistributed; the preparation script downloads them from lmarena-ai/arena-human-preference-100k on Hugging Face.</p>",
+  "creators": [
+    {"name": "Lazulfa, Indana", "affiliation": "Universitas Negeri Malang"},
+    {"name": "Widiyaningtyas, Triyanna", "affiliation": "Universitas Negeri Malang"},
+    {"name": "Prasetya, Didik Dwi", "affiliation": "Universitas Negeri Malang"}
+  ],
+  "license": "MIT",
+  "keywords": [
+    "Bayesian optimization",
+    "multi-objective optimization",
+    "large-scale group decision making",
+    "soft-constrained fuzzy clustering",
+    "LLM evaluation",
+    "LMArena"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://huggingface.co/datasets/lmarena-ai/arena-human-preference-100k",
+      "relation": "isDerivedFrom",
+      "resource_type": "dataset"
+    }
+  ]
+}
