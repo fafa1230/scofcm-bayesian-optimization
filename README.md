@@ -7,7 +7,7 @@ Code, processed data, and experimental logs for the paper
 > I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
 > Soft-Constrained Fuzzy Clustering in Large-Scale Group Decisions," manuscript, 2026.
 
-Archived version used in the paper: v1.0.0, doi:[10.5281/zenodo.23725653](https://doi.org/10.5281/zenodo.23725653)
+Archived version used in the paper: v1.1.0, doi:[10.5281/zenodo.23750059](https://doi.org/10.5281/zenodo.23750059)
 (the badge above always points to the latest version).
 
 The study tunes the three balancing parameters (ζ, κ, μ) of the soft-constrained fuzzy clustering
