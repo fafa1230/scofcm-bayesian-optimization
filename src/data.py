@@ -107,20 +107,27 @@ def phfe_score(gammas: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 # Building the LSGDM instance
 # ---------------------------------------------------------------------------
-def _long_outcomes(df: pd.DataFrame) -> pd.DataFrame:
-    """One row per (battle, side): rater, model, gamma, timestamp."""
+def _long_outcomes(df: pd.DataFrame, tie_values: dict | None = None) -> pd.DataFrame:
+    """One row per (battle, side): rater, model, gamma, timestamp.
+
+    tie_values maps a tie label ("tie", "tie (bothbad)") to its gamma; a value of None leaves that
+    outcome out of the scores (gamma = NaN). Labels not in the map get config.TIE_VALUE.
+    """
     tie = ~df["winner"].isin([WIN_A, WIN_B])
+    tv = tie_values or {}
+    tie_gamma = np.array([np.nan if tv.get(w, config.TIE_VALUE) is None else tv.get(w, config.TIE_VALUE)
+                          for w in df["winner"]], dtype=float)
     side_a = pd.DataFrame({
         "rater": df["judge_hash"].values,
         "model": df["model_a"].values,
-        "gamma": np.where(df["winner"] == WIN_A, 1.0, np.where(tie, config.TIE_VALUE, 0.0)),
+        "gamma": np.where(df["winner"] == WIN_A, 1.0, np.where(tie, tie_gamma, 0.0)),
         "won": (df["winner"] == WIN_A).values,
         "tstamp": df["tstamp"].values,
     })
     side_b = pd.DataFrame({
         "rater": df["judge_hash"].values,
         "model": df["model_b"].values,
-        "gamma": np.where(df["winner"] == WIN_B, 1.0, np.where(tie, config.TIE_VALUE, 0.0)),
+        "gamma": np.where(df["winner"] == WIN_B, 1.0, np.where(tie, tie_gamma, 0.0)),
         "won": (df["winner"] == WIN_B).values,
         "tstamp": df["tstamp"].values,
     })
@@ -148,8 +155,13 @@ def _pagerank(W: np.ndarray) -> np.ndarray:
     return np.array([pr[i] for i in range(len(A))])
 
 
-def build_instance(df: pd.DataFrame) -> dict:
-    """Apply the selection rules of Section 2.2.1 and build all fixed inputs of the pipeline."""
+def build_instance(df: pd.DataFrame, min_votes: int | None = None, tie_values: dict | None = None) -> dict:
+    """Apply the selection rules of Section 2.2.1 and build all fixed inputs of the pipeline.
+
+    min_votes and tie_values override config.MIN_VOTES_PER_RATER and the tie coding (see
+    _long_outcomes) for the sensitivity analysis; the defaults reproduce the main instance.
+    """
+    min_votes = config.MIN_VOTES_PER_RATER if min_votes is None else min_votes
     stats = {
         "total_battles": int(len(df)),
         "total_raters": int(df["judge_hash"].nunique()),
@@ -160,13 +172,13 @@ def build_instance(df: pd.DataFrame) -> dict:
 
     # Rule 1: raters with at least MIN_VOTES_PER_RATER votes
     votes = df.groupby("judge_hash").size()
-    keep = votes[votes >= config.MIN_VOTES_PER_RATER].index
+    keep = votes[votes >= min_votes].index
     d = df[df["judge_hash"].isin(keep)]
     stats["retained_raters"] = int(len(keep))
     stats["battles_retained_raters"] = int(len(d))
 
     # Rule 2: the N_MODELS models with the widest rater coverage (ties broken by name)
-    long = _long_outcomes(d)
+    long = _long_outcomes(d, tie_values)
     coverage = long.drop_duplicates(["rater", "model"]).groupby("model").size()
     coverage = coverage.reset_index(name="n").sort_values(["n", "model"], ascending=[False, True])
     models = coverage["model"].head(config.N_MODELS).tolist()
@@ -180,7 +192,9 @@ def build_instance(df: pd.DataFrame) -> dict:
     # P-HFE scores (Eq. 1); NaN where a rater never evaluated a model
     F = np.full((n, m), np.nan)
     for (r, mod), g in long.groupby(["rater", "model"])["gamma"]:
-        F[r_idx[r], m_idx[mod]] = phfe_score(g.to_numpy())
+        g = g.dropna()                   # outcomes left out of the scores (tie_values = None)
+        if len(g):
+            F[r_idx[r], m_idx[mod]] = phfe_score(g.to_numpy())
     observed = ~np.isnan(F)
     stats["raters_in_profile_matrix"] = int(n)
     stats["coverage_per_model_min_max"] = (int(observed.sum(0).min()), int(observed.sum(0).max()))

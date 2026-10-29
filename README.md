@@ -32,16 +32,22 @@ In VS Code: *Python: Select Interpreter* → `.venv/bin/python`.
 | Step | Command | What it does | Paper |
 |---|---|---|---|
 | 0 | `python tests/test_pipeline.py` | Sanity checks on synthetic data | – |
-| 1 | `python 01_prepare_data.py` | Downloads the LMArena votes, builds F, HBC, CRC, PageRank and the pilot bounds; prints Table 1 | II-B, II-D |
+| 1 | `python 01_prepare_data.py` | Downloads the LMArena votes, builds F, HBC, CRC, PageRank and the pilot bounds; prints Table 1 | 2.2, 2.4 |
 | 2 | `python 02_run_experiment.py --quick` | Smoke test: seed 1, budget 12 | – |
-| 2 | `python 02_run_experiment.py --jobs 4` | Full experiment: 20 seeds × 5 runs × 60 evaluations (about 23 min with 4 workers on an M4 Pro) | II-E |
-| 3 | `python 03_analyze.py` | RQ1–RQ3 metrics, tests, Figure 2 → `results/analysis/` | II-F, III-A |
-| 4 | `python 05_diagnostics.py` | Pareto-front size, (κ, μ) grid, ζ profile (Figure 3), time break-even → `results/analysis/diagnostics.md` | III-A, III-B |
-| 5 | `python 06_sanity_benchmark.py` | SOBO vs MOBO on DTLZ2 and on a problem with aligned objectives → `results/analysis/tables/sanity_benchmark.csv` | II-G, III-A |
-| 6 | `python 07_decision_analysis.py` | The selected decisions: subgroup sizes and weights, agreement with the flat ranking, effect of μ, ζ band, and how many MOBO Pareto configurations change the partition or ranking (main and imputed-score runs) → `results/analysis/decisions.md` | III-A-3, III-B |
+| 2 | `python 02_run_experiment.py --jobs 4` | Full experiment: 20 seeds × 5 runs × 60 evaluations (about 23 min with 4 workers on an M4 Pro) | 2.5 |
+| 3 | `python 03_analyze.py` | RQ1–RQ3 metrics, tests, Figure 2 → `results/analysis/` | 2.6, 3.1 |
+| 4 | `python 05_diagnostics.py` | Pareto-front size, (κ, μ) grid, ζ profile in steps of 0.01, time break-even → `results/analysis/diagnostics.md` | 3.1, 3.2 |
+| 5 | `python 06_sanity_benchmark.py` | SOBO vs MOBO on DTLZ2 and on a problem with aligned objectives → `results/analysis/tables/sanity_benchmark.csv` | 2.7, 3.1 |
+| 6 | `python 07_decision_analysis.py` | The selected decisions: subgroup sizes and weights, agreement with the flat ranking, effect of μ, ζ band, and how many MOBO Pareto configurations change the partition or ranking (main and imputed-score runs) → `results/analysis/decisions.md` | 3.1.3, 3.2 |
+| 7 | `python 08_baseline_comparison.py` | Gain of the SOBO and MOBO settings over the baseline setting (ζ, κ, μ) = (0.4, 0.6, 0.5): one-sample Wilcoxon (Holm), objectives and decisions → `results/analysis/baseline_comparison.md` | 2.6, 3.1.1 |
+| 8 | `python 09_random_search.py` | Random search with the same initial design and budget; 95% bootstrap intervals of the MOBO − SOBO differences (Table 4) → `results/analysis/random_search.md` | 2.6, 3.1.1 |
+| 9 | `python 10_landscape.py` | ζ profile in steps of 0.001 with the SOBO selections (Figure 3) and Sobol sensitivity indices of the objectives (about 3 min) → `results/analysis/landscape.md` | 3.1.3, 3.2.1 |
+| 10 | `python 11_scaling.py` | Evaluation time of Φ for 1,149 to 9,192 resampled raters (needs about 6 GB of memory) → `results/analysis/scaling.md` | 3.1.4, 3.2.2 |
+| 11 | `python 12_bradley_terry.py` | Consensus ranking vs Bradley–Terry rankings of the same battles (retained and all raters), Kendall's τ with bootstrap intervals → `results/analysis/bradley_terry.md` | 2.6, 3.1.3 |
+| 12 | `python 13_sensitivity.py --jobs 6` | Nine data variants (5 or 20 votes per rater, two tie codings, five 80% rater subsamples), five paired SOBO/MOBO replications each (about 40 min) → `results/sensitivity/summary.md` (Table 7) | 2.7, 3.1.4 |
 | – | `python 04_verify_baseline.py` | Optional: reproduces the case study of Yang et al. (needs their matrices in `data/yang_case/*.csv`, not included) | – |
 
-`02_run_experiment.py` skips finished runs, so it can be stopped and restarted. Steps 3–6 can be run
+`02_run_experiment.py` skips finished runs, so it can be stopped and restarted. Steps 3–11 can be run
 directly on the logs in this repository without repeating step 2 (step 5 does not use the LMArena
 data and takes about 10 minutes).
 
@@ -50,11 +56,11 @@ data and takes about 10 minutes).
 | Paper | Code |
 |---|---|
 | Table 2 (all settings) | `config.py` |
-| II-B data, P-HFE score (1), Jaccard relations (2), PageRank | `src/data.py` |
-| II-C SCO-FCM pipeline (objective function), Stages 1–5, (3)–(8) | `src/scofcm.py` (`SCOFCMPipeline`) |
-| II-D objectives f1–f3 and normalization, (9)–(12); constraints (K1)–(K4) and the MOBO/SOBO problems (13)–(14) | `src/scofcm.py` (`evaluate`, `normalize`), `config.py` |
-| II-E SOBO (GP + EI, (15)) and MOBO (GP + EHVI, (16)); decisions x_SOBO and x_MOBO | `src/optimizers.py`, `src/metrics.py` (`compromise_index`) |
-| II-F hypervolume (17), weight-coverage gap (18), A12, Holm | `src/metrics.py`, `03_analyze.py` |
+| 2.2 data, P-HFE score (1), Jaccard relations (2), PageRank | `src/data.py` |
+| 2.3 SCO-FCM pipeline (objective function), Stages 1–5, (3)–(8) | `src/scofcm.py` (`SCOFCMPipeline`) |
+| 2.4 objectives f1–f3 and normalization, (9)–(12); constraints (K1)–(K4) and the MOBO/SOBO problems (13)–(14) | `src/scofcm.py` (`evaluate`, `normalize`), `config.py` |
+| 2.5 SOBO (GP + EI, (15)) and MOBO (GP + EHVI, (16)); decisions x_SOBO and x_MOBO | `src/optimizers.py`, `src/metrics.py` (`compromise_index`) |
+| 2.6 hypervolume (17), weight-coverage gap (18), A12, Holm | `src/metrics.py`, `03_analyze.py` |
 | Figure style (Times New Roman 8 pt, printed size) | `src/plotstyle.py` |
 
 ## Data and results in this repository
@@ -65,7 +71,7 @@ data and takes about 10 minutes).
 - `results/logs/seed{S}_{RUN}.jsonl`: every evaluation of the main experiment (x, objectives, c*, timings).
 - `results/analysis/`: `summary.md` (RQ1–RQ3), `diagnostics.md`, `decisions.md`, `tables/*.csv`, and the figures.
 - `results/archive_imputed_scores/` and `data/processed/archive_imputed_scores/`: the sensitivity run in
-  which subgroup scores were averaged over all members, including imputed entries (Section III-A-4).
+  which subgroup scores were averaged over all members, including imputed entries (Section 3.1.4).
 
 The raw votes are not redistributed here; `01_prepare_data.py` downloads only the needed columns of
 [lmarena-ai/arena-human-preference-100k](https://huggingface.co/datasets/lmarena-ai/arena-human-preference-100k)
