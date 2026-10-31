@@ -1,4 +1,4 @@
-"""Step 12 (Section 3.1.4, Table 7): sensitivity of the findings to the data choices.
+"""Step 12 (Section 3.1.4, Table 6): sensitivity of the findings to the data choices.
 
 Nine variants of the instance are built from the same battles:
   votes5, votes20  raters with at least 5 or 20 votes instead of 10;

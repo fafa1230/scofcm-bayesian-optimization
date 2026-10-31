@@ -5,7 +5,7 @@
 Code, processed data, and experimental logs for the paper
 
 > I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
-> Soft-Constrained Fuzzy Clustering in Large-Scale Group Decisions," manuscript, 2026.
+> Soft-Constrained Fuzzy Clustering in Large-Scale Group Decision Making," manuscript, 2026.
 
 Archived version used in the paper: v1.1.0, doi:[10.5281/zenodo.23750059](https://doi.org/10.5281/zenodo.23750059)
 (the badge above always points to the latest version).
@@ -44,7 +44,7 @@ In VS Code: *Python: Select Interpreter* → `.venv/bin/python`.
 | 9 | `python 10_landscape.py` | ζ profile in steps of 0.001 with the SOBO selections (Figure 3) and Sobol sensitivity indices of the objectives (about 3 min) → `results/analysis/landscape.md` | 3.1.3, 3.2.1 |
 | 10 | `python 11_scaling.py` | Evaluation time of Φ for 1,149 to 9,192 resampled raters (needs about 6 GB of memory) → `results/analysis/scaling.md` | 3.1.4, 3.2.2 |
 | 11 | `python 12_bradley_terry.py` | Consensus ranking vs Bradley–Terry rankings of the same battles (retained and all raters), Kendall's τ with bootstrap intervals → `results/analysis/bradley_terry.md` | 2.6, 3.1.3 |
-| 12 | `python 13_sensitivity.py --jobs 6` | Nine data variants (5 or 20 votes per rater, two tie codings, five 80% rater subsamples), five paired SOBO/MOBO replications each (about 40 min) → `results/sensitivity/summary.md` (Table 7) | 2.7, 3.1.4 |
+| 12 | `python 13_sensitivity.py --jobs 6` | Nine data variants (5 or 20 votes per rater, two tie codings, five 80% rater subsamples), five paired SOBO/MOBO replications each (about 40 min) → `results/sensitivity/summary.md` (Table 6) | 2.7, 3.1.4 |
 | – | `python 04_verify_baseline.py` | Optional: reproduces the case study of Yang et al. (needs their matrices in `data/yang_case/*.csv`, not included) | – |
 
 `02_run_experiment.py` skips finished runs, so it can be stopped and restarted. Steps 3–11 can be run
