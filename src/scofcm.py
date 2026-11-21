@@ -38,9 +38,12 @@ class SCOFCMPipeline:
     def __init__(self, F, alpha, beta, pr_h, pr_c,
                  c_candidates=config.C_CANDIDATES, fuzzifier=config.FUZZIFIER,
                  tol=config.FCM_TOL, t_max=config.T_MAX, cc_floor=config.CC_FLOOR,
-                 cc_mode=config.CC_MODE, bounds=None, observed=None):
+                 cc_mode=config.CC_MODE, bounds=None, observed=None, missing="impute"):
         """bounds: (lo, hi) raw-objective bounds for Eq. 12, or None for theoretical bounds.
-        observed: boolean n x m mask of real votes; if given, subgroup scores use real votes only."""
+        observed: boolean n x m mask of real votes; if given, subgroup scores use real votes only.
+        missing: "impute" (default): distances use the model-mean imputed profiles F;
+                 "pds": partial distance strategy of Hathaway and Bezdek (2001), with distances over
+                 the observed entries only, rescaled to m, and centres updated from observed entries."""
         self.F = np.asarray(F, dtype=np.float64)
         self.alpha = np.asarray(alpha, dtype=np.float64)
         self.beta = np.asarray(beta, dtype=np.float64)
@@ -60,13 +63,42 @@ class SCOFCMPipeline:
         if self.observed is not None:
             self.F_obs0 = np.where(self.observed, self.F, 0.0)
             self.obs_f = self.observed.astype(np.float64)
+        if missing not in ("impute", "pds"):
+            raise ValueError("missing must be 'impute' or 'pds'")
+        if missing == "pds" and self.observed is None:
+            raise ValueError("the partial distance strategy needs the observed mask")
+        self.missing = missing
         # Fixed quantities, independent of x
         with np.errstate(divide="ignore", over="ignore", invalid="ignore"):
             self.dist = np.sqrt(_sqdist(self.F, self.F))
+            if missing == "pds":
+                M, X0 = self.obs_f, self.F_obs0
+                X0sq = X0 * X0
+                self.pds_rowsq = X0sq.sum(axis=1)
+                self.pds_scale = self.m / np.maximum(M.sum(axis=1), 1.0)
+                shared = M @ M.T
+                partial = X0sq @ M.T - 2.0 * X0 @ X0.T + M @ X0sq.T
+                d2 = np.divide(self.m * partial, shared, out=np.zeros_like(partial), where=shared > 0)
+                # pairs without a commonly rated model keep the imputed distance
+                self.dist = np.where(shared > 0, np.sqrt(np.maximum(d2, 0.0)), self.dist)
         if not np.all(np.isfinite(self.dist)):
             raise FloatingPointError("non-finite rater distances")
         np.fill_diagonal(self.dist, 0.0)
         self.R_eval = config.ZETA_EVAL * self.alpha + (1 - config.ZETA_EVAL) * self.beta
+
+    def _centre_sqdist(self, V):
+        """Squared distances of every rater to the centres V (n x c)."""
+        if self.missing == "impute":
+            return _sqdist(self.F, V)
+        d = self.pds_rowsq[:, None] - 2.0 * self.F_obs0 @ V.T + self.obs_f @ (V * V).T
+        return np.maximum(d * self.pds_scale[:, None], 0.0)
+
+    def _centres(self, Ua):
+        """Centre update of Eq. 6; with the partial distance strategy, from observed entries only."""
+        if self.missing == "impute":
+            return (Ua.T @ self.F) / Ua.sum(axis=0)[:, None]
+        den = Ua.T @ self.obs_f
+        return np.divide(Ua.T @ self.F_obs0, den, out=np.zeros_like(den), where=den > 0)
 
     # -- Stage 1 (Eq. 3) ------------------------------------------------------
     def priority_and_reachability(self, zeta):
@@ -100,7 +132,7 @@ class SCOFCMPipeline:
         F, a = self.F, self.a
         V = F[centres].copy()
         c = len(centres)
-        labels = np.argmin(_sqdist(F, V), axis=1)
+        labels = np.argmin(self._centre_sqdist(V), axis=1)
         eye = np.eye(c)
         U_prev = None
         cc_labels, cc = None, None
@@ -112,7 +144,7 @@ class SCOFCMPipeline:
                     cc = cc / np.maximum(onehot.sum(axis=0), 1.0)[None, :]
                 cc = cc + self.cc_floor
                 cc_labels = labels.copy()
-            W = cc * (_sqdist(F, V) + 1e-12)
+            W = cc * (self._centre_sqdist(V) + 1e-12)
             if a == 2.0:
                 inv = 1.0 / W
                 U = inv / inv.sum(axis=1, keepdims=True)
@@ -120,7 +152,7 @@ class SCOFCMPipeline:
                 ratio = (W[:, :, None] / W[:, None, :]) ** (1.0 / (a - 1.0))
                 U = 1.0 / ratio.sum(axis=2)
             Ua = (U ** a) * cc
-            V = (Ua.T @ F) / Ua.sum(axis=0)[:, None]
+            V = self._centres(Ua)
             labels = np.argmax(U, axis=1)
             if U_prev is not None and np.max(np.abs(U - U_prev)) < self.tol:
                 return U, V, labels, t, True
@@ -138,7 +170,7 @@ class SCOFCMPipeline:
         onehot = np.eye(c)[labels]
         counts = onehot.sum(axis=0)
         own = labels
-        cdist = _sqdist(self.F, V)
+        cdist = self._centre_sqdist(V)
         cdist[np.arange(n), own] = np.inf
         near = np.argmin(cdist, axis=1)
 

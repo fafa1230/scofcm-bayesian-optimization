@@ -31,7 +31,8 @@ C_CANDIDATES = tuple(range(2, 9))    # C = {2, ..., 8}
 CC_FLOOR = 1e-6                      # constant added to cc to avoid division by zero
 # Coordination cost of rater k in subgroup g_r (Eq. 5):
 #   "mean": average unreachability, (1/|g_r|) * sum_{s in g_r} (1 - R_ks)   <- default
-#   "sum" : sum_{s in g_r} (1 - R_ks), the literal form in Yang et al. (2026).
+#   "sum" : sum_{s in g_r} (1 - R_ks), unnormalized (Yang et al. (2026) combine the unreachabilities
+#           multiplicatively; the mean is the bounded adaptation used here).
 # With "sum", an emptied subgroup has zero cost and absorbs every rater on the next
 # iteration, so FCM cycles and never converges (see tests/test_pipeline.py).
 CC_MODE = "mean"

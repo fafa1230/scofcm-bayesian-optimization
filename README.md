@@ -7,8 +7,8 @@ Code, processed data, and experimental logs for the paper
 > I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
 > Soft-Constrained Fuzzy Clustering in Large-Scale Group Decision Making," manuscript, 2026.
 
-Archived version used in the paper: v1.1.0, doi:[10.5281/zenodo.23750059](https://doi.org/10.5281/zenodo.23750059)
-(the badge above always points to the latest version).
+Archived version of the submitted manuscript: v1.1.0, doi:[10.5281/zenodo.23750059](https://doi.org/10.5281/zenodo.23750059).
+The analyses added in the revision (steps 13–16) are in later versions; the badge above always points to the latest version.
 
 The study tunes the three balancing parameters (ζ, κ, μ) of the soft-constrained fuzzy clustering
 method SCO-FCM for large-scale group decision making (LSGDM), using 1,149 LMArena raters and
@@ -40,11 +40,15 @@ In VS Code: *Python: Select Interpreter* → `.venv/bin/python`.
 | 5 | `python 06_sanity_benchmark.py` | SOBO vs MOBO on DTLZ2 and on a problem with aligned objectives → `results/analysis/tables/sanity_benchmark.csv` | 2.7, 3.1 |
 | 6 | `python 07_decision_analysis.py` | The selected decisions: subgroup sizes and weights, agreement with the flat ranking, effect of μ, ζ band, and how many MOBO Pareto configurations change the partition or ranking (main and imputed-score runs) → `results/analysis/decisions.md` | 3.1.3, 3.2 |
 | 7 | `python 08_baseline_comparison.py` | Gain of the SOBO and MOBO settings over the baseline setting (ζ, κ, μ) = (0.4, 0.6, 0.5): one-sample Wilcoxon (Holm), objectives and decisions → `results/analysis/baseline_comparison.md` | 2.6, 3.1.1 |
-| 8 | `python 09_random_search.py` | Random search with the same initial design and budget; 95% bootstrap intervals of the MOBO − SOBO differences (Table 4) → `results/analysis/random_search.md` | 2.6, 3.1.1 |
+| 8 | `python 09_random_search.py` | Random search with the same initial design and budget; 95% bootstrap intervals of the MOBO − SOBO differences (Table 5) → `results/analysis/random_search.md` | 2.6, 3.1.1 |
 | 9 | `python 10_landscape.py` | ζ profile in steps of 0.001 with the SOBO selections (Figure 3) and Sobol sensitivity indices of the objectives (about 3 min) → `results/analysis/landscape.md` | 3.1.3, 3.2.1 |
 | 10 | `python 11_scaling.py` | Evaluation time of Φ for 1,149 to 9,192 resampled raters (needs about 6 GB of memory) → `results/analysis/scaling.md` | 3.1.4, 3.2.2 |
 | 11 | `python 12_bradley_terry.py` | Consensus ranking vs Bradley–Terry rankings of the same battles (retained and all raters), Kendall's τ with bootstrap intervals → `results/analysis/bradley_terry.md` | 2.6, 3.1.3 |
-| 12 | `python 13_sensitivity.py --jobs 6` | Nine data variants (5 or 20 votes per rater, two tie codings, five 80% rater subsamples), five paired SOBO/MOBO replications each (about 40 min) → `results/sensitivity/summary.md` (Table 6) | 2.7, 3.1.4 |
+| 12 | `python 13_sensitivity.py --jobs 6` | Nine data variants (5 or 20 votes per rater, two tie codings, five 80% rater subsamples), five paired SOBO/MOBO replications each (about 40 min) → `results/sensitivity/summary.md` (Table 7) | 2.7, 3.1.4 |
+| 13 | `python 14_revision_variants.py --jobs 6` | Four input variants (raters active in both periods, empty sets for a missing period, Jaccard over commonly encountered models, no imputation with partial distances), five paired SOBO/MOBO replications each; agreement with the main decision, consensus vs flat ranking, and the pilot-conflict rule over all variants (about 45 min) → `results/sensitivity/revision_summary.md` (Table 7) | 2.2, 3.1.4, 3.2.2 |
+| 14 | `python 15_holdout_validation.py` | Five 80/20 splits of every rater's votes: held-out skill of the subgroups for 512 configurations, random partitions, and accuracy of the consensus, flat, and Bradley–Terry rankings on unseen battles → `results/revision/holdout_summary.md` | 2.6, 3.1.3 |
+| 15 | `python 16_synthetic_conflict.py --jobs 6` | Seven synthetic problems from shared-minimizer objectives to DTLZ2, ten paired replications each (about 40 min) → `results/revision/synthetic_summary.md` (Table 8) | 2.7, 3.1.4, 3.2.2 |
+| 16 | `python 17_minority_and_coverage.py` | Profile of the two subgroups (ties, prompt languages and metadata; downloads small metadata columns once) and the weight-coverage gaps against the run-to-run spread of SOBO → `results/revision/minority_coverage.md` | 3.1.2, 3.1.3 |
 | – | `python 04_verify_baseline.py` | Optional: reproduces the case study of Yang et al. (needs their matrices in `data/yang_case/*.csv`, not included) | – |
 
 `02_run_experiment.py` skips finished runs, so it can be stopped and restarted. Steps 3–11 can be run
@@ -55,8 +59,9 @@ data and takes about 10 minutes).
 
 | Paper | Code |
 |---|---|
-| Table 2 (all settings) | `config.py` |
-| 2.2 data, P-HFE score (1), Jaccard relations (2), PageRank | `src/data.py` |
+| Table 3 (all settings) | `config.py` |
+| 2.2 data, P-HFE score (1), Jaccard relations (2), PageRank; relation variants of Table 7 | `src/data.py` (`build_instance`) |
+| No imputation (partial distance strategy), Table 7 | `src/scofcm.py` (`missing="pds"`) |
 | 2.3 SCO-FCM pipeline (objective function), Stages 1–5, (3)–(8) | `src/scofcm.py` (`SCOFCMPipeline`) |
 | 2.4 objectives f1–f3 and normalization, (9)–(12); constraints (K1)–(K4) and the MOBO/SOBO problems (13)–(14) | `src/scofcm.py` (`evaluate`, `normalize`), `config.py` |
 | 2.5 SOBO (GP + EI, (15)) and MOBO (GP + EHVI, (16)); decisions x_SOBO and x_MOBO | `src/optimizers.py`, `src/metrics.py` (`compromise_index`) |
@@ -72,6 +77,8 @@ data and takes about 10 minutes).
 - `results/analysis/`: `summary.md` (RQ1–RQ3), `diagnostics.md`, `decisions.md`, `tables/*.csv`, and the figures.
 - `results/archive_imputed_scores/` and `data/processed/archive_imputed_scores/`: the sensitivity run in
   which subgroup scores were averaged over all members, including imputed entries (Section 3.1.4).
+- `results/sensitivity/`: logs and summaries of the data and input variants (Table 7).
+- `results/revision/`: held-out validation, synthetic problems (Table 8), subgroup profile, and weight coverage.
 
 The raw votes are not redistributed here; `01_prepare_data.py` downloads only the needed columns of
 [lmarena-ai/arena-human-preference-100k](https://huggingface.co/datasets/lmarena-ai/arena-human-preference-100k)
@@ -83,9 +90,9 @@ ICML 2024, when using the data.
 ## Implementation notes
 
 1. **Coordination cost (5).** `CC_MODE = "mean"` uses the average unreachability to the
-   members of a subgroup. The literal sum of the baseline makes an emptied subgroup cost-free,
-   so it absorbs every rater on the next iteration and FCM cycles without converging
-   (`tests/test_pipeline.py`, `test_cost_modes`). Set `CC_MODE = "sum"` to use the literal form.
+   members of a subgroup, an adaptation of the baseline's multiplicative cost. An unnormalized sum
+   (`CC_MODE = "sum"`) makes an emptied subgroup cost-free, so it absorbs every rater on the next
+   iteration and FCM cycles without converging (`tests/test_pipeline.py`, `test_cost_modes`).
 2. **Normalization (12).** `NORMALIZATION = "pilot"`: min-max bounds from 512 scrambled Sobol
    configurations (seed 0), computed once in `01_prepare_data.py`. With the theoretical bounds,
    the observed ranges of f2 (0.011-0.028) and f3 (130-272) are tiny, and f1 explains 81% of the

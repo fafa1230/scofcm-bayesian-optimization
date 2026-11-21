@@ -134,12 +134,20 @@ def _long_outcomes(df: pd.DataFrame, tie_values: dict | None = None) -> pd.DataF
     return pd.concat([side_a, side_b], ignore_index=True)
 
 
-def _jaccard(B: np.ndarray) -> np.ndarray:
-    """Pairwise Jaccard similarity between the rows of a binary matrix (Eq. 2)."""
+def _jaccard(B: np.ndarray, E: np.ndarray | None = None) -> np.ndarray:
+    """Pairwise Jaccard similarity between the rows of a binary matrix (Eq. 2).
+
+    With an exposure matrix E (models each rater encountered, B a subset of E), the sets are
+    restricted to the models both raters encountered: |B_t & B_q| / |(B_t | B_q) & E_t & E_q|.
+    """
     B = B.astype(np.float64)
     inter = B @ B.T
-    size = B.sum(axis=1)
-    union = size[:, None] + size[None, :] - inter
+    if E is None:
+        size = B.sum(axis=1)
+        union = size[:, None] + size[None, :] - inter
+    else:
+        BE = B @ E.astype(np.float64).T
+        union = BE + BE.T - inter
     J = np.divide(inter, union, out=np.zeros_like(inter), where=union > 0)
     np.fill_diagonal(J, 1.0)          # a rater is fully reachable from itself
     return J
@@ -155,12 +163,24 @@ def _pagerank(W: np.ndarray) -> np.ndarray:
     return np.array([pr[i] for i in range(len(A))])
 
 
-def build_instance(df: pd.DataFrame, min_votes: int | None = None, tie_values: dict | None = None) -> dict:
+def build_instance(df: pd.DataFrame, min_votes: int | None = None, tie_values: dict | None = None,
+                   raters: list | None = None, models: list | None = None, both_periods: bool = False,
+                   missing_period: str = "full_window", similarity: str = "jaccard") -> dict:
     """Apply the selection rules of Section 2.2.1 and build all fixed inputs of the pipeline.
 
     min_votes and tie_values override config.MIN_VOTES_PER_RATER and the tie coding (see
     _long_outcomes) for the sensitivity analysis; the defaults reproduce the main instance.
+    The remaining options serve the robustness checks of the revision:
+      raters, models   fixed rater and model sets instead of the selection rules;
+      both_periods     keep only raters with votes in both periods;
+      missing_period   "full_window" (default): a rater without votes in a period is represented
+                       there by the full window; "empty": by an empty set (no relation);
+      similarity       "jaccard" (default, Eq. 2) or "coexposure": Jaccard over the models both
+                       raters encountered in the period, so that unequal exposure is not read
+                       as disagreement.
     """
+    if missing_period not in ("full_window", "empty") or similarity not in ("jaccard", "coexposure"):
+        raise ValueError("unknown missing_period or similarity")
     min_votes = config.MIN_VOTES_PER_RATER if min_votes is None else min_votes
     stats = {
         "total_battles": int(len(df)),
@@ -171,18 +191,29 @@ def build_instance(df: pd.DataFrame, min_votes: int | None = None, tie_values: d
         stats["indonesian_votes"] = int((df["language"] == "Indonesian").sum())
 
     # Rule 1: raters with at least MIN_VOTES_PER_RATER votes
-    votes = df.groupby("judge_hash").size()
-    keep = votes[votes >= min_votes].index
+    if raters is None:
+        votes = df.groupby("judge_hash").size()
+        keep = votes[votes >= min_votes].index
+    else:
+        keep = pd.Index(sorted(set(raters)))
     d = df[df["judge_hash"].isin(keep)]
     stats["retained_raters"] = int(len(keep))
     stats["battles_retained_raters"] = int(len(d))
 
     # Rule 2: the N_MODELS models with the widest rater coverage (ties broken by name)
     long = _long_outcomes(d, tie_values)
-    coverage = long.drop_duplicates(["rater", "model"]).groupby("model").size()
-    coverage = coverage.reset_index(name="n").sort_values(["n", "model"], ascending=[False, True])
-    models = coverage["model"].head(config.N_MODELS).tolist()
+    if models is None:
+        coverage = long.drop_duplicates(["rater", "model"]).groupby("model").size()
+        coverage = coverage.reset_index(name="n").sort_values(["n", "model"], ascending=[False, True])
+        models = coverage["model"].head(config.N_MODELS).tolist()
+    models = list(models)
     long = long[long["model"].isin(models)]
+
+    cutoff = pd.Timestamp(config.CUTOFF_DATE, tz="UTC").timestamp()
+    long = long.assign(hist=long["tstamp"].astype(float) < cutoff)
+    if both_periods:
+        flags = long.groupby("rater")["hist"].agg(["any", "all"])
+        long = long[long["rater"].isin(flags.index[flags["any"] & ~flags["all"]])]
 
     raters = sorted(long["rater"].unique())
     r_idx = {r: i for i, r in enumerate(raters)}
@@ -205,29 +236,34 @@ def build_instance(df: pd.DataFrame, min_votes: int | None = None, tie_values: d
     F = np.where(observed, F, col_mean[None, :])
 
     # Historical / current relations (Section 2.2.3)
-    cutoff = pd.Timestamp(config.CUTOFF_DATE, tz="UTC").timestamp()
-    long = long.assign(hist=long["tstamp"].astype(float) < cutoff)
     has_hist = long.groupby("rater")["hist"].any()
     has_curr = (~long["hist"]).groupby(long["rater"]).any()
 
-    def winner_sets(sub: pd.DataFrame) -> np.ndarray:
+    def model_sets(sub: pd.DataFrame, winners_only: bool = True) -> np.ndarray:
         B = np.zeros((n, m), dtype=bool)
-        w = sub[sub["won"]]
+        w = sub[sub["won"]] if winners_only else sub
         B[w["rater"].map(r_idx).to_numpy(), w["model"].map(m_idx).to_numpy()] = True
         return B
 
-    B_full = winner_sets(long)
-    B_hist = winner_sets(long[long["hist"]])
-    B_curr = winner_sets(long[~long["hist"]])
+    B_full = model_sets(long)
+    B_hist = model_sets(long[long["hist"]])
+    B_curr = model_sets(long[~long["hist"]])
+    E_full = model_sets(long, winners_only=False)
+    E_hist = model_sets(long[long["hist"]], winners_only=False)
+    E_curr = model_sets(long[~long["hist"]], winners_only=False)
     no_hist = np.array([not has_hist.get(r, False) for r in raters])
     no_curr = np.array([not has_curr.get(r, False) for r in raters])
-    B_hist[no_hist] = B_full[no_hist]    # backup: full observation window
-    B_curr[no_curr] = B_full[no_curr]
+    if missing_period == "full_window":
+        B_hist[no_hist] = B_full[no_hist]    # backup: full observation window
+        B_curr[no_curr] = B_full[no_curr]
+        E_hist[no_hist] = E_full[no_hist]
+        E_curr[no_curr] = E_full[no_curr]
     stats["raters_without_historical_votes"] = int(no_hist.sum())
     stats["raters_without_current_votes"] = int(no_curr.sum())
 
-    alpha = _jaccard(B_hist)
-    beta = _jaccard(B_curr)
+    coexp = similarity == "coexposure"
+    alpha = _jaccard(B_hist, E_hist if coexp else None)
+    beta = _jaccard(B_curr, E_curr if coexp else None)
     pr_h = _pagerank(alpha)
     pr_c = _pagerank(beta)
 
