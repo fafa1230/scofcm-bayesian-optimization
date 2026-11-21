@@ -7,8 +7,9 @@ Code, processed data, and experimental logs for the paper
 > I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
 > Soft-Constrained Fuzzy Clustering in Large-Scale Group Decision Making," manuscript, 2026.
 
-Archived version of the submitted manuscript: v1.1.0, doi:[10.5281/zenodo.23750059](https://doi.org/10.5281/zenodo.23750059).
-The analyses added in the revision (steps 13–16) are in later versions; the badge above always points to the latest version.
+Archived versions: v1.2.0 for the revised manuscript, with the analyses added in the revision (steps 13–16),
+doi:[10.5281/zenodo.24412602](https://doi.org/10.5281/zenodo.24412602); v1.1.0 for the submitted manuscript,
+doi:[10.5281/zenodo.23750059](https://doi.org/10.5281/zenodo.23750059). The badge above always points to the latest version.
 
 The study tunes the three balancing parameters (ζ, κ, μ) of the soft-constrained fuzzy clustering
 method SCO-FCM for large-scale group decision making (LSGDM), using 1,149 LMArena raters and
