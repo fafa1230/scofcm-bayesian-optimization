@@ -4,7 +4,7 @@
 
 Code, processed data, and experimental logs for the paper
 
-> I. Lazulfa, T. Widiyaningtyas, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
+> I. Lazulfa, T. Widiyaningtyas, I. A. E. Zaeni, and D. D. Prasetya, "Comparing Single- and Multi-Objective Bayesian Optimization for
 > Soft-Constrained Fuzzy Clustering in Large-Scale Group Decision Making," manuscript, 2026.
 
 Archived versions: v1.2.0 for the revised manuscript, with the analyses added in the revision (steps 13–16),
